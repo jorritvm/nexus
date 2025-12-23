@@ -43,5 +43,169 @@ Unification happens on 2 levels:
   - YAML configuration files
   - Default values in code
 
+## How to use
+
+The `nexus.config` module provides a flexible and type-safe way to manage configuration in your Python applications. You define your configuration structure using Pydantic models, and then use the config API to load, merge, and override configuration values from multiple sources in a clear priority order.
+
+Below are extensive usage examples covering all common scenarios. See `src/demo_app/entrypoint.py` for runnable code.
+
+### 1. Define your configuration models
+
+```python
+from pydantic import BaseModel
+
+class AppConfig(BaseModel):
+    appcfg_param_defined_in_code: str = "default_value_set_in_code"
+    appcfg_param_overwritten_by_cli: str = "default_value_set_in_appcfg_code"
+    appcfg_param_overwritten_by_env: str = "default_value_set_in_appcfg_code"
+    appcfg_param_overwritten_by_env_but_int: int = 0
+    appcfg_param_overwritten_by_file: str = "default_value_set_in_appcfg_code"
+    appcfg_param_overwritten_by_runtime_cfg: str = "default_value_set_in_appcfg"
+
+class RunConfig(BaseModel):
+    appcfg_param_overwritten_by_runtime_cfg: str = "default_value_set_in_runcfg"
+    runcfg_another_param: str = "default_runtime_value"
+    runcfg_a_nullable_param: str | None = None
+    runcfg_a_value_hardcoded_in_code: str = "default_pydantic_value"
+```
+
+---
+
+### 2. Load only defaults from AppConfig
+
+```python
+from nexus import config
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig)
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 3. Load defaults from AppConfig and RunConfig (with shared keys)
+
+```python
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig, RunConfig)
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 4. Overwrite a default value in code
+
+```python
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig, RunConfig, runcfg_a_value_hardcoded_in_code="overwritten_value_set_in_code")
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 5. Overwrite with values from a YAML file
+
+```python
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig, RunConfig)
+config.setup_file("src/demo_app/appconfig.yaml")
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 6. Overwrite with values from an .env file (including type coercion)
+
+```python
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig, RunConfig)
+config.setup_file("src/demo_app/appconfig.env")
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 7. Overwrite with environment variables (including type coercion)
+
+```python
+import os
+config.CONFIG = None  # reset config
+os.environ["APPCFG_PARAM_OVERWRITTEN_BY_ENV_BUT_INT"] = "2"
+config.setup_defaults(AppConfig, RunConfig)
+config.setup_file("src/demo_app/appconfig.env")
+config.setup_env_vars()
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 8. Overwrite with command line arguments
+
+You can pass CLI arguments to your script, e.g.:
+
+```shell
+python entrypoint.py --appcfg_param_overwritten_by_cli "cli_value"
+```
+
+Or programmatically:
+
+```python
+import sys
+sys.argv += ["--appcfg_param_overwritten_by_cli", "cli_value"]
+config.CONFIG = None  # reset config
+config.setup_defaults(AppConfig, RunConfig)
+config.setup_file("src/demo_app/appconfig.env")
+config.setup_env_vars()
+config.setup_cli()
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 9. Full setup in one go (recommended for most use cases)
+
+```python
+config.CONFIG = None  # reset config
+config.setup(AppConfig, RunConfig, path="src/demo_app/appconfig.yaml", env=True, cli=True)
+print(config.CONFIG.model_dump())
+```
+
+---
+
+### 10. Accessing the config anywhere
+
+After setup, you can import and use `config.CONFIG` or `config.get_config()` from anywhere in your application:
+
+```python
+from nexus import config
+cfg = config.get_config()
+print(cfg.appcfg_param_defined_in_code)
+```
+
+---
+
+### 11. CLI help output
+
+The CLI help is automatically generated from your config model fields. Argument placeholders are shown as `VALUE` for clarity:
+
+```shell
+python entrypoint.py --help
+```
+
+Example output:
+
+```
+usage: entrypoint.py [-h] [--appcfg_param_defined_in_code VALUE] [--appcfg_param_overwritten_by_cli VALUE] ...
+
+options:
+  -h, --help            show this help message and exit
+  --appcfg_param_defined_in_code VALUE
+  --appcfg_param_overwritten_by_cli VALUE
+  ...
+```
+
+---
+
+See `src/demo_app/entrypoint.py` for a full runnable example covering all these cases.
+
 ## Author
 Jorrit Vander Mynsbrugge

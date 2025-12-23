@@ -15,6 +15,9 @@ class RunConfig(BaseModel):
     runcfg_a_nullable_param: str | None = None
     runcfg_a_value_hardcoded_in_code: str = "default_pydantic_value"
 
+
+
+
 if __name__ == "__main__":
     # testing the nexus config module
     print("------------------------------------------------------------------")
@@ -90,9 +93,5 @@ if __name__ == "__main__":
     config.CONFIG = None # reset config
     config.setup(AppConfig, RunConfig, path="src/demo_app/appconfig.yaml", env=True, cli=True)
     pprint(config.CONFIG.model_dump())
-
-
-
-
 
     print("done")
