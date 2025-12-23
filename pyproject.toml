@@ -1,6 +1,6 @@
 [project]
 name = "nexus"
-version = "0.1.0"
+version = "0.2.0"
 description = "A configuration manager for python code."
 authors = [
     {name = "Jorrit Vander Mynsbrugge",email = "44178217+jorritvm@users.noreply.github.com"}
