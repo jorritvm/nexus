@@ -10,19 +10,35 @@ Meant to reduce the amount of developer code needed to get a flexible python app
     * [Configuration levels](#configuration-levels)
     * [Type safety](#type-safety)
     * [Unified configuration model](#unified-configuration-model)
+  * [How to use](#how-to-use)
+    * [1. Define your configuration models](#1-define-your-configuration-models)
+    * [2. Load only defaults from AppConfig](#2-load-only-defaults-from-appconfig)
+    * [3. Load defaults from AppConfig and RunConfig (with shared keys)](#3-load-defaults-from-appconfig-and-runconfig-with-shared-keys)
+    * [4. Overwrite a default value in code](#4-overwrite-a-default-value-in-code)
+    * [5. Overwrite with values from a YAML file](#5-overwrite-with-values-from-a-yaml-file)
+    * [6. Overwrite with values from an .env file (including type coercion)](#6-overwrite-with-values-from-an-env-file-including-type-coercion)
+    * [7. Overwrite with environment variables (including type coercion)](#7-overwrite-with-environment-variables-including-type-coercion)
+    * [8. Overwrite with command line arguments](#8-overwrite-with-command-line-arguments)
+    * [9. Full setup in one go (recommended for most use cases)](#9-full-setup-in-one-go-recommended-for-most-use-cases)
+    * [10. Accessing the config anywhere](#10-accessing-the-config-anywhere)
+    * [11. CLI help output](#11-cli-help-output)
   * [Author](#author)
 <!-- TOC -->
 
 ## Features
-- ✅ Supports command line arguments
-- ✅ Supports environment variables
-- ✅ Support environment variables from .env files
-- ✅ Supports YAML configuration files
-- ✅ Support default values in code
-- ✅ Type safe configuration values
-- ✅ Fail early
-- ✅ Priority based merge of multiple configuration sources
-- ✅ Easy to use API
+
+| Feature                                 | Supported |
+|-----------------------------------------|:---------:|
+| Supports command line arguments         |     ✅     |
+| Supports environment variables          |     ✅     |
+| Support environment variables from .env files |  ✅  |
+| Supports YAML configuration files       |     ✅     |
+| Support default values in code          |     ✅     |
+| Type safe configuration values          |     ✅     |
+| Fail early                              |     ✅     |
+| Priority based merge of multiple configuration sources | ✅ |
+| Easy to use API                         |     ✅     |
+| Support for nested config files         |     ❌     |
 
 ## Concepts
 ### Configuration levels
