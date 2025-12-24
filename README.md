@@ -43,6 +43,29 @@ Meant to reduce the amount of developer code needed to get a flexible python app
 | Easy to use API                         |     ✅     |
 | Support for nested config files         |     ❌     |
 
+## Minimal example
+Code:
+```python
+import nexus as nx
+from nexus import CONFIG
+from pydantic import BaseModel
+
+class MyConfiguration(BaseModel):
+    some_parameter: str = "default_value_set_in_python_code"
+    another_parameter: str = "default_value_set_in_python_code"
+
+nx.setup(MyConfiguration, cli=True)
+print(CONFIG.model_dump())
+```
+Execution:
+```commandline
+python test_nexus.py --another_parameter set_from_cli 
+{'some_parameter': 'default_value_set_in_python_code', 'another_parameter': 'set_from_cli'}
+```
+
+
+
+
 ## Concepts
 ### Configuration levels
 There are 2 levels of configuration supported by this library.
@@ -198,6 +221,7 @@ Or programmatically:
 ```python
 import sys
 sys.argv += ["--appcfg_param_overwritten_by_cli", "cli_value"]
+
 nx.setup_defaults(AppConfig, RunConfig)
 nx.setup_file("src/demo_app/appconfig.env")
 nx.setup_env_vars()
@@ -252,7 +276,6 @@ options:
 See `src/demo_app/entrypoint.py` for a full runnable example covering all these cases.
 
 ## Todo
-- fix packaging
 - add traceability of source
 - add json (first level only)?
 
