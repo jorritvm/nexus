@@ -6,6 +6,7 @@ from pathlib import Path
 import typing
 from typing import Type, Any, TYPE_CHECKING
 from enum import Enum
+import json
 
 import yaml
 from pydantic import BaseModel, create_model
@@ -17,6 +18,7 @@ class ConfigSource(Enum):
     SET_BY_DEFAULT_RUN_CONFIG = "set_by_default_run_config"
     SET_BY_DEVELOPER = "set_by_developer"
     SET_BY_YAML_FILE = "set_by_yaml_file"
+    SET_BY_JSON_FILE = "set_by_json_file"
     SET_BY_ENV_FILE = "set_by_env_file"
     SET_BY_ENVIRONMENT = "set_by_environment"
     SET_BY_CLI = "set_by_cli"
@@ -130,7 +132,7 @@ def setup_defaults(app_model: Type[BaseModel],
 
 def setup_file(path: str) -> None:
     """
-    Overwrite _CONFIG with values from YAML or .env file, enforcing Pydantic validation.
+    Overwrite _CONFIG with values from YAML, JSON, or .env file, enforcing Pydantic validation.
     file_dict values will override existing config values for matching keys.
     """
     global _CONFIG
@@ -141,13 +143,19 @@ def setup_file(path: str) -> None:
     # Merge config values explicitly: file_dict values override existing config
     merged_dict = _CONFIG.model_dump() | file_dict
     _CONFIG = _CONFIG.__class__(**merged_dict)
-    # Update extended: for each key in file_dict, set source to yaml_file or env_file
-    file_source = (ConfigSource.SET_BY_YAML_FILE, path) if Path(path).suffix in {".yaml", ".yml"} else (ConfigSource.SET_BY_ENV_FILE, path)
-    for k in file_dict:
-        _CONFIG_EXTENDED[k] = (getattr(_CONFIG, k), file_source)
-    # For other keys, keep previous source
+    # Determine file source type
+    suffix = Path(path).suffix
+    if suffix in {".yaml", ".yml"}:
+        file_source = (ConfigSource.SET_BY_YAML_FILE, path)
+    elif suffix == ".json":
+        file_source = (ConfigSource.SET_BY_JSON_FILE, path)
+    else:
+        file_source = (ConfigSource.SET_BY_ENV_FILE, path)
+    # For all keys in the model, if the value matches file_dict, set source to file_source
     for k in _CONFIG.model_fields:
-        if k not in file_dict and k not in _CONFIG_EXTENDED:
+        if k in file_dict and getattr(_CONFIG, k) == file_dict[k]:
+            _CONFIG_EXTENDED[k] = (getattr(_CONFIG, k), file_source)
+        elif k not in _CONFIG_EXTENDED:
             _CONFIG_EXTENDED[k] = (getattr(_CONFIG, k), ConfigSource.SET_BY_DEFAULT_APP_CONFIG)
 
 
@@ -223,14 +231,20 @@ def _update_config_extended(model: BaseModel | None, source: ConfigSource | None
 def _load_config_file(path: Path, model: BaseModel) -> dict:
     config_dict = {}
     if path.suffix in {".yaml", ".yml"}:
-        with path.open("r", encoding="utf-8") as f:
-            config_dict = yaml.safe_load(f) or {}
+        config_dict = _load_yaml_file(path)
     elif path.suffix == ".env":
         config_dict = _load_env_file(path)
+    elif path.suffix == ".json":
+        config_dict = _load_json_file(path)
     # Normalize keys to match model fields (case-insensitive)
     model_fields = {f.lower(): f for f in model.model_fields}
     normalized = {model_fields.get(k.lower(), k): v for k, v in (config_dict or {}).items()}
     return normalized
+
+
+def _load_yaml_file(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
 
 
 def _load_env_file(path: Path) -> dict:
@@ -244,6 +258,14 @@ def _load_env_file(path: Path) -> dict:
                 key, value = line.split("=", 1)
                 env_dict[key.strip().lower()] = value.strip()
     return env_dict
+
+
+def _load_json_file(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as f:
+        raw_dict = json.load(f)
+    # For each top-level key, if value is dict or list, convert to str via json.dumps
+    return {k: json.dumps(v) if isinstance(v, (dict, list)) else v for k, v in (raw_dict or {}).items()}
+
 
 
 def _extract_env_vars(model: BaseModel) -> dict:

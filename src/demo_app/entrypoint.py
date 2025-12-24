@@ -15,6 +15,9 @@ class RunConfig(BaseModel):
     runcfg_another_param: str = "default_runtime_value"
     runcfg_a_nullable_param: str | None = None
     runcfg_a_value_hardcoded_in_code: str = "default_pydantic_value"
+    json_str_param: str = "string from runconfig"
+    json_int_param: int = 99
+    json_nested_param: str = '{"run": true, "list": [4, 5, 6]}'
 
 
 
@@ -62,42 +65,33 @@ if __name__ == "__main__":
     # nx.setup_file("src/demo_app/appconfig.env")
     # nx.setup_env_vars()
     # pprint(CONFIG.model_dump())
-
-    print("------------------------------------------------------------------")
-    print("This is a config with a commandline arg: appcfg_param_overwritten_by_cli")
-    nx.clear_config() # reset config
-    nx.setup_defaults(AppConfig, RunConfig)
-    nx.setup_file("src/demo_app/appconfig.env")
-    nx.setup_env_vars()
-    nx.setup_cli()
-    from nexus.config import _CONFIG_EXTENDED
-    print(">>> CONFIG")
-    pprint(CONFIG.model_dump())
-    print(">>> CONFIG_EXTENDED")
-    pprint(_CONFIG_EXTENDED)
-
-    x="""this generates a nice cli
-    usage: entrypoint.py [-h] [--appcfg_param_defined_in_code APPCFG_PARAM_DEFINED_IN_CODE] [--appcfg_param_overwritten_by_cli APPCFG_PARAM_OVERWRITTEN_BY_CLI] [--appcfg_param_overwritten_by_env APPCFG_PARAM_OVERWRITTEN_BY_ENV] [--appcfg_param_overwritten_by_env_but_int APPCFG_PARAM_OVERWRITTEN_BY_ENV_BUT_INT] [--appcfg_param_overwritten_by_file APPCFG_PARAM_OVERWRITTEN_BY_FILE]
-                     [--appcfg_param_overwritten_by_runtime_cfg APPCFG_PARAM_OVERWRITTEN_BY_RUNTIME_CFG] [--runcfg_another_param RUNCFG_ANOTHER_PARAM] [--runcfg_a_nullable_param RUNCFG_A_NULLABLE_PARAM] [--runcfg_a_value_hardcoded_in_code RUNCFG_A_VALUE_HARDCODED_IN_CODE]
-
-    options:
-      -h, --help            show this help message and exit
-      --appcfg_param_defined_in_code APPCFG_PARAM_DEFINED_IN_CODE
-      --appcfg_param_overwritten_by_cli APPCFG_PARAM_OVERWRITTEN_BY_CLI
-      --appcfg_param_overwritten_by_env APPCFG_PARAM_OVERWRITTEN_BY_ENV
-      --appcfg_param_overwritten_by_env_but_int APPCFG_PARAM_OVERWRITTEN_BY_ENV_BUT_INT
-      --appcfg_param_overwritten_by_file APPCFG_PARAM_OVERWRITTEN_BY_FILE
-      --appcfg_param_overwritten_by_runtime_cfg APPCFG_PARAM_OVERWRITTEN_BY_RUNTIME_CFG
-      --runcfg_another_param RUNCFG_ANOTHER_PARAM
-      --runcfg_a_nullable_param RUNCFG_A_NULLABLE_PARAM
-      --runcfg_a_value_hardcoded_in_code RUNCFG_A_VALUE_HARDCODED_IN_CODE
-    """
-
-
+    #
+    # print("------------------------------------------------------------------")
+    # print("This is a config with a commandline arg: appcfg_param_overwritten_by_cli")
+    # nx.clear_config() # reset config
+    # nx.setup_defaults(AppConfig, RunConfig)
+    # nx.setup_file("src/demo_app/appconfig.env")
+    # nx.setup_env_vars()
+    # nx.setup_cli()
+    # from nexus.config import _CONFIG_EXTENDED
+    # print(">>> CONFIG")
+    # pprint(CONFIG.model_dump())
+    # print(">>> CONFIG_EXTENDED")
+    # pprint(_CONFIG_EXTENDED)
+    #
     # print("------------------------------------------------------------------")
     # print("This is a config set up in one go")
     # nx.clear_config() # reset config
     # nx.setup(AppConfig, RunConfig, path="src/demo_app/appconfig.yaml", env=True, cli=True)
     # pprint(CONFIG.model_dump())
+
+    print("------------------------------------------------------------------")
+    print("Showcase: loading str, int, and nested values from appconfig.json and runconfig")
+    nx.clear_config()
+    nx.setup_defaults(AppConfig, RunConfig)
+    nx.setup_file("src/demo_app/appconfig.json")
+    pprint(CONFIG.model_dump())
+    print("CONFIG_EXTENDED:")
+    pprint(nx.CONFIG_EXTENDED)
 
     print("done")

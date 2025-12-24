@@ -1,0 +1,6 @@
+{
+  "json_str_param": "string from appconfig.json",
+  "json_int_param": 42,
+  "json_nested_param": {"foo": "bar", "baz": [1, 2, 3]}
+}
+

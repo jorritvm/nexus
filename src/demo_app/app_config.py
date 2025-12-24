@@ -12,3 +12,4 @@ class AppConfig(BaseModel):
     appcfg_param_overwritten_by_file: str = "default_value_set_in_appcfg_code"
     appcfg_param_overwritten_by_runtime_cfg: str = "default_value_set_in_appcfg"
 
+
