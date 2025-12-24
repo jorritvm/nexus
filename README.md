@@ -133,7 +133,7 @@ class AppConfig(BaseModel):
 
 In your entrypoint you can define a runtime specific configuration model. Here you must also define all imports.
 ```python
-# entrypoint.py - a entrypoint specific configuration
+# demo.py - a entrypoint specific configuration
 import nexus as nx
 from nexus import CONFIG
 from pydantic import BaseModel
@@ -213,7 +213,7 @@ print(CONFIG.model_dump())
 You can pass CLI arguments to your script, e.g.:
 
 ```shell
-python entrypoint.py --appcfg_param_overwritten_by_cli "cli_value"
+python demo.py --appcfg_param_overwritten_by_cli "cli_value"
 ```
 
 Or programmatically:
@@ -256,7 +256,7 @@ print(CONFIG.appcfg_param_defined_in_code)
 The CLI help is automatically generated from your config model fields. Argument placeholders are shown as `VALUE` for clarity:
 
 ```shell
-python entrypoint.py --help
+python demo.py --help
 ```
 
 Example output:
