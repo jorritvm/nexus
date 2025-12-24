@@ -2,35 +2,53 @@ import argparse
 import os
 from pathlib import Path
 import typing
-from typing import Type, Optional
+from typing import Type, Any, TYPE_CHECKING
 
 import yaml
 from pydantic import BaseModel, create_model
 
-CONFIG: BaseModel | None = None
+# This module uses a private field that hols the configuration model, and a public proxy CONFIG object.
+# This pattern enables from nexus import CONFIG without having to reimport CONFIG when that object is updated.
+_CONFIG: BaseModel | None = None # module private field
 
+class ConfigProxy:
+    def __getattr__(self, name: str) -> Any:
+        if _CONFIG is None:
+            raise RuntimeError("CONFIG is not initialized. Call setup_defaults/setup first.")
+        return getattr(_CONFIG, name)
+
+    def __repr__(self) -> str:
+        return f"<CONFIG proxy -> {_CONFIG!r}>"
+
+if TYPE_CHECKING:
+    # Help IDEs/type-checkers understand the public shape
+    CONFIG: BaseModel  # type: ignore[no-redef]
+
+# Stable export that always reflects the latest _CONFIG
+CONFIG = ConfigProxy()
+
+
+# --- PUBLIC API ---
 __all__ = [
     "setup",
     "setup_defaults",
     "setup_file",
     "setup_env_vars",
     "setup_cli",
+    "clear_config",
     "CONFIG",
     ]
-
-
-# --- PUBLIC API ---
 
 def setup(app_model: Type[BaseModel],
           run_model: Type[BaseModel] | None = None,
           path: str | None = None,
           env: bool = True,
-          cli: bool = True) -> BaseModel:
+          cli: bool = True) -> None:
     """
     Setup config all in one go, merging in order:
     defaults < file (yaml or env) < env vars < CLI
     If run_model is provided, its keys override app_model keys.
-    Updates CONFIG.
+    Updates _CONFIG.
     """
     setup_defaults(app_model, run_model)
     if path:
@@ -39,7 +57,6 @@ def setup(app_model: Type[BaseModel],
         setup_env_vars()
     if cli:
         setup_cli()
-    return CONFIG
 
 
 def setup_defaults(app_model: Type[BaseModel],
@@ -47,15 +64,15 @@ def setup_defaults(app_model: Type[BaseModel],
                    **kwargs) -> None:
     """
     If run_model is provided, dynamically create a merged config model from app_model and run_model (run_model keys take precedence).
-    If not, just instantiate app_model and set global variable CONFIG.
+    If not, just instantiate app_model and set global variable _CONFIG.
     Custom values can be passed via kwargs and will take precedence over model defaults.
     """
-    global CONFIG
+    global _CONFIG
     if run_model is None:
         # Only pass kwargs that are valid for app_model
         valid_keys = set(app_model.model_fields)
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_keys}
-        CONFIG = app_model(**filtered_kwargs)
+        _CONFIG = app_model(**filtered_kwargs)
         return
     # For merged model, merge app_model defaults, run_model defaults, then kwargs
     app_fields = app_model.model_fields
@@ -71,47 +88,54 @@ def setup_defaults(app_model: Type[BaseModel],
         default = merged_defaults.get(k, ...)
         field_definitions[k] = (typ, default)
     MergedConfig = create_model("MergedConfig", **field_definitions)  # type: ignore
-    CONFIG = MergedConfig()
+    _CONFIG = MergedConfig()
 
 
 def setup_file(path: str) -> None:
     """
-    Overwrite CONFIG with values from YAML or .env file, enforcing Pydantic validation.
+    Overwrite _CONFIG with values from YAML or .env file, enforcing Pydantic validation.
     file_dict values will override existing config values for matching keys.
     """
-    global CONFIG
-    if CONFIG is None:
+    global _CONFIG
+    if _CONFIG is None:
         raise RuntimeError("Call setup_defaults first.")
-    file_dict = _load_config_file(Path(path), CONFIG)
+    file_dict = _load_config_file(Path(path), _CONFIG)
     # Merge config values explicitly: file_dict values override existing config
-    merged_dict = CONFIG.model_dump() | file_dict
-    CONFIG = CONFIG.__class__(**merged_dict)
+    merged_dict = _CONFIG.model_dump() | file_dict
+    _CONFIG = _CONFIG.__class__(**merged_dict)
 
 
 def setup_env_vars() -> None:
     """
-    Overwrite CONFIG with environment variables matching model fields.
+    Overwrite _CONFIG with environment variables matching model fields.
     Environment variable values will override existing config values for matching keys.
     Uses Pydantic validation for type coercion.
     """
-    global CONFIG
-    if CONFIG is None:
+    global _CONFIG
+    if _CONFIG is None:
         raise RuntimeError("Call setup_defaults first.")
-    env_dict = _extract_env_vars(CONFIG)
+    env_dict = _extract_env_vars(_CONFIG)
     # Merge config values explicitly: env_dict values override existing config
-    merged_dict = CONFIG.model_dump() | env_dict
-    CONFIG = CONFIG.__class__(**merged_dict)
+    merged_dict = _CONFIG.model_dump() | env_dict
+    _CONFIG = _CONFIG.__class__(**merged_dict)
 
 
 def setup_cli() -> None:
     """
-    Overwrite CONFIG with CLI arguments matching model fields.
+    Overwrite _CONFIG with CLI arguments matching model fields.
     """
-    global CONFIG
-    if CONFIG is None:
+    global _CONFIG
+    if _CONFIG is None:
         raise RuntimeError("Call setup_defaults first.")
-    cli_dict = _extract_cli_args(CONFIG)
-    CONFIG = CONFIG.model_copy(update=cli_dict)
+    cli_dict = _extract_cli_args(_CONFIG)
+    _CONFIG = _CONFIG.model_copy(update=cli_dict)
+
+def clear_config() -> None:
+    """
+    Clear the current configuration.
+    """
+    global _CONFIG
+    _CONFIG = None
 
 
 # --- HELPERS ---

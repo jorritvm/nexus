@@ -13,6 +13,9 @@ dependencies = [
     "update (>=0.0.1,<0.0.2)",
     "pyyaml (>=6.0.3,<7.0.0)"
 ]
+packages = [
+    { include = "nexus", from = "src" }
+]
 
 
 [build-system]
