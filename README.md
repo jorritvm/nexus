@@ -310,8 +310,5 @@ This dictionary contains tuples of (value, source), where source indicates where
  'runcfg_another_param': ('default_runtime_value', SET_BY_DEFAULT_RUN_CONFIG)}
  ```
 
-## Todo
-- add json (first level only)?
-
 ## Author
 Jorrit Vander Mynsbrugge
