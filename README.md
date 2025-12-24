@@ -275,8 +275,42 @@ options:
 
 See `src/demo_app/entrypoint.py` for a full runnable example covering all these cases.
 
+## Configuration traceability
+To track the source of the configuration value, a second dictionary `CONFIG_EXTENDED` is available after setup.
+This dictionary contains tuples of (value, source), where source indicates where the value originated from.
+
+```commandline
+>>> CONFIG
+{'appcfg_param_defined_in_code': 'default_value_set_in_code',
+ 'appcfg_param_overwritten_by_cli': 'set_by_cli',
+ 'appcfg_param_overwritten_by_env': 'default_value_set_in_appcfg_code',
+ 'appcfg_param_overwritten_by_env_but_int': 1,
+ 'appcfg_param_overwritten_by_file': 'value_set_in_env_file',
+ 'appcfg_param_overwritten_by_runtime_cfg': 'default_value_set_in_runcfg',
+ 'runcfg_a_nullable_param': None,
+ 'runcfg_a_value_hardcoded_in_code': 'default_pydantic_value',
+ 'runcfg_another_param': 'default_runtime_value'}
+>>> CONFIG_EXTENDED
+{'appcfg_param_defined_in_code': ('default_value_set_in_code',
+                                  SET_BY_DEFAULT_APP_CONFIG),
+ 'appcfg_param_overwritten_by_cli': ('set_by_cli', SET_BY_CLI),
+ 'appcfg_param_overwritten_by_env': ('default_value_set_in_appcfg_code',
+                                     SET_BY_DEFAULT_APP_CONFIG),
+ 'appcfg_param_overwritten_by_env_but_int': (1,
+                                             (SET_BY_ENV_FILE,
+                                              'src/demo_app/appconfig.env')),
+ 'appcfg_param_overwritten_by_file': ('value_set_in_env_file',
+                                      (SET_BY_ENV_FILE,
+                                       'src/demo_app/appconfig.env')),
+ 'appcfg_param_overwritten_by_runtime_cfg': ('default_value_set_in_runcfg',
+                                             SET_BY_DEFAULT_RUN_CONFIG),
+ 'runcfg_a_nullable_param': (None, SET_BY_DEFAULT_RUN_CONFIG),
+ 'runcfg_a_value_hardcoded_in_code': ('default_pydantic_value',
+                                      SET_BY_DEFAULT_RUN_CONFIG),
+ 'runcfg_another_param': ('default_runtime_value', SET_BY_DEFAULT_RUN_CONFIG)}
+ ```
+
 ## Todo
-- add traceability of source
 - add json (first level only)?
 
 ## Author
