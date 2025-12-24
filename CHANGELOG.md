@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0] 
+### Added
+- Traceability of configuration values via the new `_CONFIG_EXTENDED` variable, which records the value and its source for each config field.
+- Support for loading configuration from JSON files, with nested structures serialized as JSON strings for compatibility with Pydantic models.
+
+### Changed
+- Refactored file loading logic to use dedicated loader functions for YAML, JSON, and ENV files.
+
+---
+
 ## [0.3.0]
 ### Added
 - Expose the entire public API of the `config` module at the package level, so you can use `import nexus as nx` and call `nx.setup()`, `nx.CONFIG`, etc., directly.
@@ -28,5 +38,3 @@
 
 ## [0.1.0]
 First version, supports basic configuration loading from YAML files.
-
-

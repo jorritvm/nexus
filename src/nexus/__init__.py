@@ -15,4 +15,5 @@ __all__ = [
     "setup_cli",
     "clear_config",
     "CONFIG",
+    "_CONFIG_EXTENDED",
 ]
