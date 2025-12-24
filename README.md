@@ -90,7 +90,6 @@ class RunConfig(BaseModel):
 ### 2. Load only defaults from AppConfig
 
 ```python
-from nexus import config
 config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig)
 print(config.CONFIG.model_dump())
@@ -101,7 +100,6 @@ print(config.CONFIG.model_dump())
 ### 3. Load defaults from AppConfig and RunConfig (with shared keys)
 
 ```python
-config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig, RunConfig)
 print(config.CONFIG.model_dump())
 ```
@@ -111,7 +109,6 @@ print(config.CONFIG.model_dump())
 ### 4. Overwrite a default value in code
 
 ```python
-config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig, RunConfig, runcfg_a_value_hardcoded_in_code="overwritten_value_set_in_code")
 print(config.CONFIG.model_dump())
 ```
@@ -121,7 +118,6 @@ print(config.CONFIG.model_dump())
 ### 5. Overwrite with values from a YAML file
 
 ```python
-config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig, RunConfig)
 config.setup_file("src/demo_app/appconfig.yaml")
 print(config.CONFIG.model_dump())
@@ -132,7 +128,6 @@ print(config.CONFIG.model_dump())
 ### 6. Overwrite with values from an .env file (including type coercion)
 
 ```python
-config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig, RunConfig)
 config.setup_file("src/demo_app/appconfig.env")
 print(config.CONFIG.model_dump())
@@ -144,8 +139,8 @@ print(config.CONFIG.model_dump())
 
 ```python
 import os
-config.CONFIG = None  # reset config
 os.environ["APPCFG_PARAM_OVERWRITTEN_BY_ENV_BUT_INT"] = "2"
+
 config.setup_defaults(AppConfig, RunConfig)
 config.setup_file("src/demo_app/appconfig.env")
 config.setup_env_vars()
@@ -167,7 +162,6 @@ Or programmatically:
 ```python
 import sys
 sys.argv += ["--appcfg_param_overwritten_by_cli", "cli_value"]
-config.CONFIG = None  # reset config
 config.setup_defaults(AppConfig, RunConfig)
 config.setup_file("src/demo_app/appconfig.env")
 config.setup_env_vars()
@@ -180,7 +174,6 @@ print(config.CONFIG.model_dump())
 ### 9. Full setup in one go (recommended for most use cases)
 
 ```python
-config.CONFIG = None  # reset config
 config.setup(AppConfig, RunConfig, path="src/demo_app/appconfig.yaml", env=True, cli=True)
 print(config.CONFIG.model_dump())
 ```
@@ -189,12 +182,11 @@ print(config.CONFIG.model_dump())
 
 ### 10. Accessing the config anywhere
 
-After setup, you can import and use `config.CONFIG` or `config.get_config()` from anywhere in your application:
+After setup, you can import and use `config.CONFIG` from anywhere in your application:
 
 ```python
-from nexus import config
-cfg = config.get_config()
-print(cfg.appcfg_param_defined_in_code)
+from nexus.config import CONFIG
+print(CONFIG.appcfg_param_defined_in_code)
 ```
 
 ---

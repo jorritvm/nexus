@@ -1,6 +1,7 @@
 import argparse
 import os
 from pathlib import Path
+import typing
 from typing import Type, Optional
 
 import yaml
@@ -20,8 +21,11 @@ __all__ = [
 
 # --- PUBLIC API ---
 
-def setup(app_model: Type[BaseModel], run_model: Optional[Type[BaseModel]] = None, path: Optional[str] = None,
-          env: bool = True, cli: bool = True) -> BaseModel:
+def setup(app_model: Type[BaseModel],
+          run_model: Type[BaseModel] | None = None,
+          path: str | None = None,
+          env: bool = True,
+          cli: bool = True) -> BaseModel:
     """
     Setup config all in one go, merging in order:
     defaults < file (yaml or env) < env vars < CLI
@@ -38,10 +42,12 @@ def setup(app_model: Type[BaseModel], run_model: Optional[Type[BaseModel]] = Non
     return CONFIG
 
 
-def setup_defaults(app_model: Type[BaseModel], run_model: Optional[Type[BaseModel]] = None, **kwargs) -> None:
+def setup_defaults(app_model: Type[BaseModel],
+                   run_model: Type[BaseModel] | None = None,
+                   **kwargs) -> None:
     """
     If run_model is provided, dynamically create a merged config model from app_model and run_model (run_model keys take precedence).
-    If not, just instantiate app_model and set config_instance.
+    If not, just instantiate app_model and set global variable CONFIG.
     Custom values can be passed via kwargs and will take precedence over model defaults.
     """
     global CONFIG
@@ -70,7 +76,7 @@ def setup_defaults(app_model: Type[BaseModel], run_model: Optional[Type[BaseMode
 
 def setup_file(path: str) -> None:
     """
-    Overwrite config_instance with values from YAML or .env file, enforcing Pydantic validation.
+    Overwrite CONFIG with values from YAML or .env file, enforcing Pydantic validation.
     file_dict values will override existing config values for matching keys.
     """
     global CONFIG
@@ -84,7 +90,7 @@ def setup_file(path: str) -> None:
 
 def setup_env_vars() -> None:
     """
-    Overwrite config_instance with environment variables matching model fields.
+    Overwrite CONFIG with environment variables matching model fields.
     Environment variable values will override existing config values for matching keys.
     Uses Pydantic validation for type coercion.
     """
@@ -99,7 +105,7 @@ def setup_env_vars() -> None:
 
 def setup_cli() -> None:
     """
-    Overwrite config_instance with CLI arguments matching model fields.
+    Overwrite CONFIG with CLI arguments matching model fields.
     """
     global CONFIG
     if CONFIG is None:
@@ -163,7 +169,6 @@ def _extract_cli_args(model: BaseModel) -> dict:
 
 
 def _get_argparse_type(annotation):
-    import typing
     origin = typing.get_origin(annotation)
     if origin is typing.Union:
         args = typing.get_args(annotation)
